@@ -1,0 +1,173 @@
+import pygame
+import math
+import random
+
+# Инициализация Pygame
+pygame.init()
+
+# Настройки окна
+width, height = 800, 600
+screen = pygame.display.set_mode((width, height))
+pygame.display.set_caption("Режимы сферы и частиц")
+
+# Цвета
+colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)]  # Красный, зеленый, синий, желтый
+current_color_index = 0
+max_radius = height // 6  # Фиксированный радиус сферы
+
+# Цвета фона
+background_color_options = {'light': (245, 245, 220), 'dark': (100, 100, 100)}  # Бежевый и серый
+background_color_names = ['light', 'dark']
+background_color_index = 1  # Начальный цвет фона
+background_color = background_color_options[background_color_names[background_color_index]]
+
+# Частицы, вращающиеся вокруг сферы
+num_orbiting_particles = 20  # Количество частиц, имитирующих вращение
+orbiting_particles = []
+particle_radius = 8  # Радиус частицы
+orbit_radius = max_radius + 20  # Радиус, по которому частицы движутся
+particle_speed = 0.01  # Медленная скорость вращения частиц
+particles_visible = True  # Флаг, определяющий, видны ли частицы
+
+# Инициализация вращающихся частиц
+for i in range(num_orbiting_particles):
+    angle = (2 * math.pi / num_orbiting_particles) * i  # Разделение по кругу
+    orbiting_particles.append({
+        'angle': angle,
+        'color': random.choice(colors),  # Каждый цвет частицы случайный
+    })
+
+# Параметры для прыгающей сферы
+sphere_y = height // 2
+velocity_y = -400  # Начальная скорость прыжка для непрерывного движения
+gravity = 800  # Сила притяжения
+bounce_coefficient = -0.7  # Упругость сферы (потеря энергии при отскоке)
+
+# Параметры для пульсации сферы
+pulsating = False
+pulse_radius = max_radius
+pulse_speed = 3  # Средняя скорость пульсации
+pulse_direction = 1  # Направление изменения радиуса
+pulse_range = (max_radius * 0.6, max_radius * 1.5)  # Диапазон радиуса при пульсации
+
+# Режимы
+mode = 1  # 1 - вращение частиц, 2 - прыгающая сфера, 3 - пульсация, 4 - статичная сфера
+
+# Функция для рисования градиентной сферы
+def draw_gradient_circle(surface, color, center, radius):
+    for r in range(radius, 0, -1):
+        alpha = int(255 * (r / radius))  # Прозрачность для градиента
+        gradient_color = (
+            min(color[0] + (255 - color[0]) * (1 - r / radius), 255),
+            min(color[1] + (255 - color[1]) * (1 - r / radius), 255),
+            min(color[2] + (255 - color[2]) * (1 - r / radius), 255)
+        )
+        pygame.draw.circle(surface, gradient_color + (alpha,), center, r)
+
+# Функция для отрисовки кнопок режимов
+def draw_mode_buttons(surface):
+    button_width, button_height = 130, 30
+    for i in range(4):
+        x = 10
+        y = 10 + (button_height + 10) * i
+        pygame.draw.rect(surface, (200, 200, 200), (x, y, button_width, button_height))
+        font = pygame.font.Font(None, 24)
+        mode_text = f"Mode {i + 1}"
+        text = font.render(mode_text, True, (0, 0, 0))
+        surface.blit(text, (x + 10, y + 5))
+
+# Основной цикл
+running = True
+clock = pygame.time.Clock()
+
+while running:
+    dt = clock.tick(60) / 1000.0  # Время в секундах между кадрами
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = event.pos
+            # Проверка нажатия на кнопки режима
+            for i in range(4):
+                if 10 <= mouse_x <= 140 and 10 + (40 * i) <= mouse_y <= 40 + (40 * i):
+                    mode = i + 1
+                    if mode == 1:
+                        particles_visible = True
+                        sphere_y = height // 2
+                    elif mode == 2:
+                        particles_visible = False
+                        velocity_y = -400  # Перезапуск прыжков
+                        sphere_y = height // 2
+                    elif mode == 3:
+                        pulsating = True
+                        particles_visible = False
+                    else:
+                        pulsating = False
+                        particles_visible = True
+                        pulse_radius = max_radius
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:  # Переключение цвета сферы при нажатии пробела
+                current_color_index = (current_color_index + 1) % len(colors)
+
+    # Очистка экрана
+    screen.fill(background_color)
+
+    # Отрисовка сферы в зависимости от режима
+    if mode == 1:
+        # Первый режим: сфера неподвижна, частицы вращаются вокруг неё
+        draw_gradient_circle(screen, colors[current_color_index], (width // 2, height // 2), max_radius)
+
+        if particles_visible:
+            for i, particle in enumerate(orbiting_particles):
+                particle['angle'] += particle_speed
+
+                # Вычисление позиции частицы с учетом вращения
+                x = width // 2 + math.cos(particle['angle']) * orbit_radius
+                y = height // 2 + math.sin(particle['angle']) * orbit_radius * 0.5
+
+                # Рисование частицы с ее случайным цветом
+                pygame.draw.circle(screen, particle['color'], (int(x), int(y)), particle_radius)
+
+    elif mode == 2:
+        # Второй режим: сфера прыгает вверх и вниз непрерывно
+        velocity_y += gravity * dt
+        sphere_y += int(velocity_y * dt)
+
+        if sphere_y + max_radius > height:  # Упругий отскок от нижнего барьера
+            sphere_y = height - max_radius
+            velocity_y *= bounce_coefficient
+
+        # Отрисовка сферы
+        draw_gradient_circle(screen, colors[current_color_index], (width // 2, sphere_y), max_radius)
+
+        # Отрисовка частиц, которые не должны быть видны, если они за сферой
+        if particles_visible:
+            for i, particle in enumerate(orbiting_particles):
+                # Вычисление позиции частицы с учетом вращения
+                x = width // 2 + math.cos(particle['angle']) * orbit_radius
+                y = sphere_y + math.sin(particle['angle']) * orbit_radius * 0.5
+
+                # Проверка, не пересекла ли частица радиус сферы
+                if abs(y - sphere_y) < max_radius:
+                    # Рисование частицы с ее случайным цветом
+                    pygame.draw.circle(screen, particle['color'], (int(x), int(y)), particle_radius)
+
+    elif mode == 3:
+        # Третий режим: средняя пульсация сферы с заметным изменением радиуса
+        pulse_radius += pulse_speed * pulse_direction
+
+        if pulse_radius >= pulse_range[1] or pulse_radius <= pulse_range[0]:
+            pulse_direction *= -1
+
+        draw_gradient_circle(screen, colors[current_color_index], (width // 2, height // 2), int(pulse_radius))
+
+    elif mode == 4:
+        # Четвёртый режим: сфера статична
+        draw_gradient_circle(screen, colors[current_color_index], (width // 2, height // 2), max_radius)
+
+    # Отрисовка кнопок режимов
+    draw_mode_buttons(screen)
+
+    # Обновление экрана
+    pygame.display.flip()
