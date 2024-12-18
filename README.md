@@ -9,7 +9,7 @@ Installation:
 * Clone the repository: `git clone https://github.com/suchkovis/SimpleVoiceAssistant`
 * Navigate to the project directory: `cd SimpleVoiceAssistan`
 * Install the required dependencies: `pip install -r requirements.txt`
-* Download Vosk model files as per the project requirements. 
+* [Download](https://github.com/kercre123/vosk-models) Vosk model files as per the project requirements. 
 
 Usage:
 ------
