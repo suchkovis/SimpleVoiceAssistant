@@ -5,11 +5,11 @@ class Usefull_functions:
     def extract_json(self, response_text):
         """Extract JSON from the response text using multiple strategies."""
         try:
-            # Try extracting from code block with json syntax
+
             if "```json" in response_text:
                 response_text = response_text[response_text.find("```json") + 7: response_text.find("```", response_text.find("```json") + 7)].strip()
                 return json.loads(response_text)
-            # Try extracting from generic code block
+
             elif "```" in response_text:
                 response_text = response_text[response_text.find("```") + 3: response_text.find("```", response_text.find("```") + 3)].strip()
                 return json.loads(response_text)
@@ -17,7 +17,7 @@ class Usefull_functions:
             pass
 
         try:
-            # Try extracting from first and last curly braces
+
             response_text = response_text[response_text.find('{'): response_text.rfind('}') + 1].strip()
             return json.loads(response_text)
         except (json.JSONDecodeError, AttributeError):
