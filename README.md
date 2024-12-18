@@ -1,1 +1,0 @@
-# infa_2024_suchkov
