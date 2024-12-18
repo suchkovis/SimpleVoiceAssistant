@@ -1,5 +1,5 @@
 
-VoiceLogic
+SimpleVoiceAssistant
 =========================
 
 SimpleVoiceAssistant is a Python-based voice assistant that uses Vosk for speech recognition, OpenAI for processing, and Pyttsx3 for text-to-speech capabilities. This project is designed to enable natural interaction via voice commands, supporting both practical and theoretical queries.
