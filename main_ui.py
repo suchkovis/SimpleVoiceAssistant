@@ -15,23 +15,19 @@ class VoiceUI(QMainWindow):
         self.setGeometry(100, 100, 400, 400)
         self.logic = logic
 
-        # Wave parameters
         self.base_radius = 120
         self.wave_points = 60
         self.phase_shift = 0
         self.phase_speed = 0.1
 
-        # Start repaint timer
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_ui)
         self.timer.start(50)
 
-        # Start audio processing thread
         self.audio_thread = threading.Thread(target=self.logic.process_audio)
         self.audio_thread.start()
 
     def update_ui(self):
-        # Update phase for wave animation
         if self.logic.state in ["waiting", "listening", "processing", "executing"]:
             self.phase_shift += self.phase_speed
         self.repaint()
@@ -46,7 +42,6 @@ class VoiceUI(QMainWindow):
         painter.setPen(Qt.NoPen)
         painter.setBrush(color)
 
-        # Draw dynamic wave
         path = self.create_wave_path(center_x, center_y)
         painter.drawPath(path)
 
